@@ -1,11 +1,13 @@
 import { inject, track } from "@vercel/analytics";
-import { analyticsPageUrl } from "../lib/analytics.js";
+import { analyticsEvent, analyticsPayload } from "../lib/analytics.js";
 import { chartMarkup } from "../lib/chart.js";
 import {
   FREQUENCIES,
   LIMITS,
   answerSentence,
+  chartCaption,
   formatFull,
+  formatHeadline,
   formatInput,
   formatMoney,
   formatRate,
@@ -34,13 +36,18 @@ function trackEvent(name, data) {
       (window.vaq = window.vaq || []).push(params);
     };
   }
-  const payload = { ...(data || {}) };
+  const payload = analyticsPayload(data);
   try {
     const src = readSrc(new URLSearchParams(location.search));
     if (src) payload.src = src;
   } catch {
     /* location can be missing in odd embeds */
   }
+  delete payload.p;
+  delete payload.m;
+  delete payload.r;
+  delete payload.y;
+  delete payload.f;
   try {
     if (Object.keys(payload).length) track(name, payload);
     else track(name);
@@ -62,11 +69,7 @@ function startAnalytics() {
   inject(
     {
       beforeSend(event) {
-        try {
-          return { ...event, url: analyticsPageUrl(location.href, document.referrer) };
-        } catch {
-          return event;
-        }
+        return analyticsEvent(event, location.href, document.referrer);
       },
     },
     conf,
@@ -208,13 +211,15 @@ function mount() {
     const result = project(plan);
     const model = previewModel(canonical());
     const years = Math.round(S.y);
-    const shown = formatMoney(result.bal);
+    const shown = formatHeadline(result.bal);
     odometer(shown);
     $("contrib").textContent = formatMoney(result.con);
     $("interest").textContent = formatMoney(result.int);
     $("yrsLbl").textContent = `${years} ${yearWord(years)}`;
     $("rateLbl").textContent = `${formatRate(S.r)}%`;
     $("answer").textContent = answerSentence(plan, result);
+    const caption = $("chart-cap");
+    if (caption) caption.textContent = chartCaption(plan, result);
     $("chart").innerHTML = chartMarkup(result);
     renderTable(result);
     const hash = location.hash === "#sheet" || location.hash === "#lock" ? location.hash : "";

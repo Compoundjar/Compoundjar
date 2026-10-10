@@ -25,7 +25,11 @@ export function InfoPage({ page }) {
         </header>
         <article className="content" id="content">
           <h1>{page.title}</h1>
-          {page.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          {page.paragraphs.map((paragraph) => (
+            <p key={paragraph} className={paragraph === "A = P(1 + r/n)^(nt)" || paragraph.startsWith("FV =") ? "eq" : undefined}>
+              {paragraph}
+            </p>
+          ))}
         </article>
       </div>
       <SiteFooter />

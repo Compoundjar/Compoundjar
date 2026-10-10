@@ -1,142 +1,152 @@
+import { Inline } from "./inline.js";
+import { DataTable } from "./data-table.js";
 import { footerPages } from "../content/footer.js";
-import { scenarios, scenarioPath } from "../content/scenarios.js";
 import {
-  aboutLine,
   contentUpdated,
   contentUpdatedLabel,
-  examples,
+  depositColumnLabel,
   faqs,
-  formula,
+  formulaParagraphs,
+  frequencyNote,
+  frequencyRows,
   howToSteps,
+  lumpNote,
+  lumpRows,
+  monthlyNote,
+  monthlyRows,
   pageDisclaimer,
-  returnSection,
+  popularScenarios,
+  returnBullets,
+  returnCaveat,
   ruleRows,
-  scenarioNote,
+  sources,
+  todayDollars,
+  waitingNote,
+  waitingRows,
 } from "../content/home.js";
-
-function MoneyTable({ caption, rows }) {
-  return (
-    <div className="year-wrap">
-      <table>
-        <caption className="chart-cap">{caption}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Plan</th>
-            <th scope="col">Balance</th>
-            <th scope="col">You put in</th>
-            <th scope="col">Interest</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.label}>
-              <th scope="row">{row.label}</th>
-              <td>{row.balance}</td>
-              <td>{row.contributed}</td>
-              <td>{row.interest}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 export function HomeContent() {
   return (
     <div className="app">
       <div className="content" id="content">
         <h2>How to use this calculator</h2>
+        <p>It takes about ten seconds. Drag a slider or type a number, and the jar refills instantly.</p>
         <ol>
           {howToSteps.map((step) => (
-            <li key={step.title}><strong>{step.title}.</strong> {step.body}</li>
+            <li key={step.title}>
+              <strong>{step.title}.</strong> <Inline text={step.body} />
+            </li>
           ))}
         </ol>
-        <p>Open Advanced to switch yearly, quarterly, monthly, or daily compounding. Monthly is the default. The result updates as you move a slider. There is no calculate button.</p>
+        <p>
+          The big number at the top is your total. The chart shows how much of it is your deposits and how much is growth. When you like the plan, tap <strong>Lock in this plan</strong>. You&apos;ll get a link you can share or bookmark, plus a monthly calendar reminder to make your deposit.
+        </p>
 
         <h2>The compound interest formula</h2>
-        {formula.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        <p className="eq">{formula.lump}</p>
+        <p>{formulaParagraphs.intro}</p>
+        <p>{formulaParagraphs.lumpLead}</p>
+        <p className="eq">{formulaParagraphs.lump}</p>
         <ul>
-          {formula.variables.map((line) => <li key={line}>{line}</li>)}
+          {formulaParagraphs.variables.map((line) => <li key={line}>{line}</li>)}
         </ul>
-        {formula.after.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        <p className="eq">{formula.annuity}</p>
-        {formula.timing.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        <p>{formulaParagraphs.annuityLead}</p>
+        <p className="eq">{formulaParagraphs.annuity}</p>
+        <p>{formulaParagraphs.timing}</p>
+        <p>{formulaParagraphs.worked}</p>
+        <p><Inline text={formulaParagraphs.otherFrequency} /></p>
 
         <h2>Worked examples</h2>
-        <p>Every balance below is computed with the same engine as the calculator, rounded to the nearest dollar.</p>
-        <h3>A $10,000 lump sum at 7%</h3>
-        <MoneyTable caption={examples.lump.caption} rows={examples.lump.rows} />
-        <h3>$200, $500, or $1,000 a month</h3>
-        <MoneyTable caption={examples.monthly.caption} rows={examples.monthly.rows} />
-        <h3>Starting at 25 versus 35</h3>
-        <MoneyTable caption={examples.waiting.caption} rows={examples.waiting.rows} />
-        <p>{examples.waiting.note}</p>
-        <h3>Daily, monthly, and yearly compounding</h3>
-        <MoneyTable caption={examples.frequency.caption} rows={examples.frequency.rows} />
-        <p>{examples.frequency.note}</p>
+        <p>All examples use 7% a year, compounded monthly, unless noted.</p>
 
-        <h2>What return should I use?</h2>
-        {returnSection.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-        <ul className="src-list">
-          {returnSection.sources.map((source) => (
-            <li key={source.url}>
-              <a href={source.url} rel="noopener noreferrer">{source.name}</a>
+        <h3>$10,000 lump sum, no extra deposits</h3>
+        <DataTable
+          headers={["Years", "Ending balance", "Growth"]}
+          rows={lumpRows.map((row) => [row.label, row.balance, row.growth])}
+        />
+        <p>{lumpNote}</p>
+
+        <h3>Monthly deposits for 30 years (starting from $0)</h3>
+        <DataTable
+          headers={["Monthly deposit", "You put in", "Ending balance", "Growth"]}
+          rows={monthlyRows.map((row) => [row.label, row.contributed, row.balance, row.growth])}
+        />
+        <p>{monthlyNote}</p>
+
+        <h3>Starting at 25 vs 35: the cost of waiting</h3>
+        <p>$300 a month until age 65:</p>
+        <DataTable
+          headers={["Start age", "Years", "You put in", "Balance at 65"]}
+          rows={waitingRows.map((row) => [row.label, row.years, row.contributed, row.balance])}
+        />
+        <p><Inline text={waitingNote} /></p>
+
+        <h3>Daily vs monthly vs yearly compounding</h3>
+        <p>Same 7% rate, 30 years:</p>
+        <DataTable
+          headers={["Compounding", "$10,000 lump sum", depositColumnLabel]}
+          rows={frequencyRows.map((row) => [row.label, row.lump, row.deposits])}
+        />
+        <p><Inline text={frequencyNote} /></p>
+
+        <h2 id="returns">What return should I use?</h2>
+        <p>No one knows future returns, so treat the rate as a &quot;what if.&quot; Try a few. These real-world numbers can help you choose a range:</p>
+        <ul>
+          {returnBullets.map((bullet) => (
+            <li key={bullet.slice(0, 24)}><Inline text={bullet} /></li>
+          ))}
+        </ul>
+        <p>{todayDollars}</p>
+        <p>{returnCaveat}</p>
+
+        <h2>Rule of 72: how long to double your money</h2>
+        <p>Divide 72 by your yearly return to estimate how many years it takes your money to double. At 7%, 72 ÷ 7 ≈ 10.3 years.</p>
+        <DataTable
+          headers={["Yearly return", "Rule of 72 estimate", "Exact (compounded yearly)"]}
+          rows={ruleRows.map((row) => [row.rate, row.estimate, row.exact])}
+        />
+        <p>The shortcut is closest around 8%. It&apos;s a quick mental check, not a replacement for running the numbers above.</p>
+
+        <h2 id="scenarios">Popular scenarios</h2>
+        <ul>
+          {popularScenarios.map((scenario) => (
+            <li key={scenario.href}>
+              <a href={scenario.href}>{scenario.label}</a>
+              {scenario.blurb ? `: ${scenario.blurb}` : null}
             </li>
           ))}
         </ul>
 
-        <h2>Rule of 72</h2>
-        <p>For a lump sum and no deposits, years to double is about 72 divided by the annual percent. It is a shortcut, not this calculator&apos;s full formula. Deposits change the result.</p>
-        <div className="year-wrap">
-          <table>
-            <caption className="chart-cap">Rule of 72 doubling times.</caption>
-            <thead>
-              <tr><th scope="col">Rate</th><th scope="col">Years to double</th></tr>
-            </thead>
-            <tbody>
-              {ruleRows.map((row) => (
-                <tr key={row.rate}><th scope="row">{row.rate}</th><td>{row.years}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <h2 id="scenarios">Popular scenarios</h2>
-        {scenarios.length ? (
-          <ul>
-            {scenarios.map((scenario) => (
-              <li key={scenario.slug}>
-                <a href={scenarioPath(scenario.slug)}>{scenario.title}</a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>{scenarioNote}</p>
-        )}
-
-        <h2 id="faqs">FAQs</h2>
+        <h2 id="faqs">Frequently asked questions</h2>
         <div className="faq">
           {faqs.map((faq) => (
             <div key={faq.q}>
               <h3>{faq.q}</h3>
-              <p>{faq.a}</p>
+              <p><Inline text={faq.a} /></p>
             </div>
           ))}
         </div>
 
         <p className="updated">
-          Updated <time dateTime={contentUpdated}>{contentUpdatedLabel}</time>. {aboutLine}
+          Last updated <time dateTime={contentUpdated}>{contentUpdatedLabel}</time>
+          {" · "}
+          Built by <a href="/about">Sean / Compound Jar</a>
+          {" · "}
+          {footerPages.map((page, index) => (
+            <span key={page.href}>
+              {index ? " · " : null}
+              <a href={page.href}>{page.label}</a>
+            </span>
+          ))}
         </p>
         <p className="page-note">{pageDisclaimer}</p>
-        {footerPages.length ? (
-          <ul>
-            {footerPages.map((page) => (
-              <li key={page.href}><a href={page.href}>{page.label}</a></li>
-            ))}
-          </ul>
-        ) : null}
+        <h2>Sources</h2>
+        <ul className="src-list">
+          {sources.map((source) => (
+            <li key={source.url}>
+              <a href={source.url} rel="noopener noreferrer">{source.name}</a>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

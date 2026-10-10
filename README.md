@@ -21,8 +21,8 @@ npm start
 
 ## What the page does
 
-- Inputs: starting amount, monthly deposit, yearly return, years, and compounding frequency. Results update as you move a slider. Slider travel is piecewise: most of the track covers everyday amounts (about $0–$100K to start, $0–$5K a month, and 0–15%), and the rest reaches $50M, $100K a month, and 100%. Years run 1–50 on the slider. A typed or linked year can still be up to 80. The big total stays pinned while you scroll to the sliders, and very large totals use a short form such as $2.71B.
-- Query params: `p`, `m`, `r`, `y`, `f`. Missing params use the defaults ($1,000, $200/month, 7%, 30 years, monthly).
+- Inputs: starting amount, monthly deposit, yearly return, years, and compounding frequency. Results update as you move a slider. Slider travel is piecewise: most of the track covers everyday amounts (about $0–$100K to start, $0–$5K a month, and 0–15%), and the rest reaches $50M, $100K a month, and 100%. Years run 1–50 on the slider. A typed or linked year can still be up to 80. The big total stays pinned while you scroll to the sliders. Millions under $10M show two decimals ($1.02M) and drop a trailing .0. Larger totals use a short form such as $2.71B.
+- Query params: `p`, `m`, `r`, `y`, `f`. Missing params use the defaults ($5,000, $800/month, 7%, 30 years, monthly), which the engine totals at $1,016,559. The big total and the preview image show that as $1.02M.
 - **Lock in this plan** shares a link tagged `src=share`, including when the visitor arrived from another `src`. Marketing links use their own values (`tt-01`, `ig-01`, `x-01`, `yt-01`, `tt-bio`, `ig-bio`, `x-bio`, `rd-01`, `ph`). `src` is not part of the canonical URL. On the free analytics plan, visits are reported as `/src/{value}` so the Pages panel can split them. Custom events also send `src` for a paid plan. An old `s=1` link is treated as `src=share`.
 - `/og` draws the link-preview image for the same numbers. Crawlers get the title, description, and image in the HTML. They do not need JavaScript.
 - The document title and meta description stay the homepage SEO copy. `og:title`, `og:description`, and `og:url` stay specific to the plan in the URL. The canonical URL is always `https://compoundjar.com/`.
@@ -49,10 +49,11 @@ Search Console and Bing Webmaster Tools are separate dashboard steps.
 
 ## Editing copy
 
-- Words on the homepage: `content/home.js`. Dollar amounts in the examples and FAQs are computed in that file from `lib/plan.js`. Do not paste balances by hand.
+- Words on the homepage: `content/home.js`. Projection totals, including the default plan, are computed there from `lib/plan.js`. The visible date is `contentUpdatedLabel` (October 10, 2026).
 - Social profiles for Organization `sameAs`: `content/social.js`.
-- Scenario pages live in `content/scenarios.js`. `app/[slug]/page.js` renders one curated plan per slug, with its own canonical URL and a `scenario_page_view` event. Do not add a page for a share link. The five launch slugs use placeholder copy. Marketing replaces the words. The sitemap already includes the list.
-- Footer pages are About, Methodology, Privacy, and Disclaimer. Edit the words in `content/pages.js`. Each page shows the last-updated date.
+- Scenario pages live in `content/scenarios.js`. `app/[slug]/page.js` renders one curated plan per slug, with its own canonical URL and a `scenario_page_view` event. Do not add a page for a share link. The sitemap includes the five launch slugs.
+- Footer pages are About, Methodology, Privacy, and Disclaimer. Methodology repeats the homepage formula section. Each page shows the last-updated date.
+- Analytics pageviews keep the path plus `src` and drop `p`, `m`, `r`, `y`, and `f` before they are sent. A homepage visit with `src` is reported as `/src/{value}`. A scenario visit with `src` is reported as `/{slug}/src/{value}`.
 
 ## Lighthouse
 

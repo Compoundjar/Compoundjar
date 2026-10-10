@@ -2,11 +2,14 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { CalculatorView } from "../../components/calculator-view.js";
 import { ClientBoot } from "../../components/client-boot.js";
+import { JsonLd } from "../../components/json-ld.js";
+import { ScenarioArticle } from "../../components/scenario-article.js";
 import { SiteFooter } from "../../components/site-footer.js";
+import { faqPlain } from "../../content/home.js";
 import { findScenario, scenarios } from "../../content/scenarios.js";
 import { isPreviewHost, requestHost, requestOrigin } from "../../lib/http.js";
-import { answerSentence, previewModel, readSrc } from "../../lib/plan.js";
-import { TWITTER_SITE, buildPageMeta } from "../../lib/seo.js";
+import { previewModel, readSrc } from "../../lib/plan.js";
+import { TWITTER_SITE, buildPageMeta, buildScenarioJsonLd } from "../../lib/seo.js";
 
 export function generateStaticParams() {
   return scenarios.map((scenario) => ({ slug: scenario.slug }));
@@ -26,7 +29,7 @@ export async function generateMetadata({ params, searchParams }) {
     src: readSrc(query),
     indexable: !isPreviewHost(requestHost(headerList)),
     canonical: `https://compoundjar.com/${scenario.slug}`,
-    title: `${scenario.title} | Compound Jar`,
+    title: scenario.title,
     description: scenario.description,
     path: `/${scenario.slug}`,
   });
@@ -60,24 +63,28 @@ export default async function ScenarioPage({ params }) {
   if (!scenario) notFound();
   const headerList = await headers();
   const origin = requestOrigin(headerList);
-  const answer = answerSentence(scenario.plan);
+  const faqs = scenario.faqs.map((faq) => ({ q: faq.q, a: faqPlain(faq) }));
   return (
     <>
       <CalculatorView
         plan={scenario.plan}
         origin={origin}
-        title={scenario.title}
+        title={scenario.h1}
         subhead={scenario.subhead}
         scenario={scenario.slug}
         tableOpen
       />
-      <div className="app">
-        <article className="content">
-          {scenario.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-          <p>{answer}</p>
-        </article>
-      </div>
+      <ScenarioArticle scenario={scenario} />
       <SiteFooter />
+      <JsonLd
+        data={buildScenarioJsonLd({
+          crumbs: [
+            { name: "Home", item: "https://compoundjar.com/" },
+            { name: scenario.crumb, item: `https://compoundjar.com/${scenario.slug}` },
+          ],
+          faqs,
+        })}
+      />
       <ClientBoot />
     </>
   );

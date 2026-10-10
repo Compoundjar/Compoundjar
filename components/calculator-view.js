@@ -4,7 +4,9 @@ import {
   FREQUENCIES,
   RANGES,
   answerSentence,
+  chartCaption,
   formatFull,
+  formatHeadline,
   formatInput,
   formatMoney,
   formatRate,
@@ -43,7 +45,7 @@ export function CalculatorView({ plan, origin, title, subhead, scenario, tableOp
   const years = plan.y;
   const host = origin.replace(/^https?:\/\//, "");
   const shareQuery = planSearchParams(plan, { src: "share" }).toString();
-  const shown = model.totalFull;
+  const shown = formatHeadline(result.bal);
   const icsQuery = planSearchParams(plan);
   icsQuery.set("d", nextMonthStart());
   const rows = yearRows(result);
@@ -120,7 +122,7 @@ export function CalculatorView({ plan, origin, title, subhead, scenario, tableOp
               aria-label="Stacked bar chart of balance by year"
               dangerouslySetInnerHTML={{ __html: chart }}
             />
-            <figcaption className="chart-cap">Each bar is a year. Sand is money you put in. Coral is interest.</figcaption>
+            <figcaption className="chart-cap" id="chart-cap">{chartCaption(plan, result)}</figcaption>
           </figure>
 
           <details className="table-toggle card" id="year-details" open={tableOpen || undefined}>
@@ -195,7 +197,7 @@ export function CalculatorView({ plan, origin, title, subhead, scenario, tableOp
         <p className="lead">Save this plan as a link you can share or come back to, and get a reminder each month to make your deposit.</p>
         <div className="plan">
           <div>
-            <div className="pv" id="sh-total">{model.totalFull}</div>
+            <div className="pv" id="sh-total">{shown}</div>
             <div className="pk" id="sh-yrs">in {years} {yearWord(years)}</div>
           </div>
             <div className="pp" id="sh-plan">

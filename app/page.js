@@ -3,7 +3,7 @@ import { CalculatorView } from "../components/calculator-view.js";
 import { ClientBoot } from "../components/client-boot.js";
 import { HomeContent } from "../components/home-content.js";
 import { JsonLd } from "../components/json-ld.js";
-import { faqs } from "../content/home.js";
+import { faqPlain, faqs } from "../content/home.js";
 import { sameAs } from "../content/social.js";
 import { isPreviewHost, requestHost, requestOrigin } from "../lib/http.js";
 import { parsePlan, previewModel, readSrc } from "../lib/plan.js";
@@ -54,7 +54,7 @@ export default async function Page({ searchParams }) {
     <>
       <CalculatorView plan={plan} origin={origin} />
       <HomeContent />
-      <JsonLd data={buildJsonLd({ faqs, sameAs })} />
+      <JsonLd data={buildJsonLd({ faqs: faqs.map((faq) => ({ q: faq.q, a: faqPlain(faq) })), sameAs })} />
       <ClientBoot />
     </>
   );
