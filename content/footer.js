@@ -1,6 +1,10 @@
 /**
- * Footer pages for a follow-up. Empty so we do not link to missing URLs.
+ * Footer links. Each href has a real page.
  * Shape: { href: "/about", label: "About" }
- * Planned: About, Methodology, Privacy.
  */
-export const footerPages = [];
+export const footerPages = [
+  { href: "/about", label: "About" },
+  { href: "/methodology", label: "Methodology" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/disclaimer", label: "Disclaimer" },
+];

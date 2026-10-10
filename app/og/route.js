@@ -12,9 +12,18 @@ const fraunces = loadFont("Fraunces-600.ttf");
 const inter500 = loadFont("Inter-500.ttf");
 const inter600 = loadFont("Inter-600.ttf");
 
+function headlineSize(text) {
+  const chars = String(text).length;
+  if (chars <= 6) return 120;
+  if (chars <= 8) return 96;
+  if (chars <= 11) return 76;
+  return 56;
+}
+
 export async function GET(request) {
   const plan = parsePlan(request.nextUrl.searchParams);
   const model = previewModel(plan);
+  const totalSize = headlineSize(model.total);
   return new ImageResponse(
     (
       <div
@@ -51,7 +60,7 @@ export async function GET(request) {
               style={{
                 fontFamily: "Fraunces",
                 fontWeight: 600,
-                fontSize: 124,
+                fontSize: totalSize,
                 lineHeight: 1,
                 letterSpacing: "-0.04em",
                 marginTop: 12,

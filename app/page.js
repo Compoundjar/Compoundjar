@@ -1,13 +1,12 @@
 import { headers } from "next/headers";
-import Script from "next/script";
 import { CalculatorView } from "../components/calculator-view.js";
+import { ClientBoot } from "../components/client-boot.js";
 import { HomeContent } from "../components/home-content.js";
 import { JsonLd } from "../components/json-ld.js";
 import { faqs } from "../content/home.js";
 import { sameAs } from "../content/social.js";
-import { calculatorSrc } from "../lib/client-asset.js";
 import { isPreviewHost, requestHost, requestOrigin } from "../lib/http.js";
-import { parsePlan, previewModel, shareFlags } from "../lib/plan.js";
+import { parsePlan, previewModel, readSrc } from "../lib/plan.js";
 import { TWITTER_SITE, buildJsonLd, buildPageMeta } from "../lib/seo.js";
 
 export async function generateMetadata({ searchParams }) {
@@ -19,7 +18,7 @@ export async function generateMetadata({ searchParams }) {
     model: previewModel(plan),
     plan,
     origin,
-    flags: shareFlags(params),
+    src: readSrc(params),
     indexable: !isPreviewHost(requestHost(headerList)),
   });
   const index = meta.robots.startsWith("index");
@@ -51,15 +50,12 @@ export default async function Page({ searchParams }) {
   const headerList = await headers();
   const origin = requestOrigin(headerList);
   const plan = parsePlan(params);
-  const analyticsConfig = process.env.NEXT_PUBLIC_VERCEL_OBSERVABILITY_CLIENT_CONFIG || "";
-  const configJson = JSON.stringify(analyticsConfig).replace(/</g, "\\u003c");
   return (
     <>
       <CalculatorView plan={plan} origin={origin} />
       <HomeContent />
       <JsonLd data={buildJsonLd({ faqs, sameAs })} />
-      <script id="cj-analytics" type="application/json" dangerouslySetInnerHTML={{ __html: configJson }} />
-      <Script src={calculatorSrc} strategy="afterInteractive" />
+      <ClientBoot />
     </>
   );
 }

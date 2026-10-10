@@ -6,12 +6,17 @@ import {
   answerSentence,
   formatFull,
   formatInput,
+  formatMoney,
   formatRate,
   nextMonthStart,
+  planKey,
   planSearchParams,
   previewModel,
   project,
+  sliderMax,
   sliderPercent,
+  sliderPos,
+  totalFontSize,
   yearRows,
   yearWord,
 } from "../lib/plan.js";
@@ -32,12 +37,13 @@ function Logo() {
   );
 }
 
-export function CalculatorView({ plan, origin }) {
+export function CalculatorView({ plan, origin, title, subhead, scenario, tableOpen = false }) {
   const result = project(plan);
   const model = previewModel(plan);
   const years = plan.y;
   const host = origin.replace(/^https?:\/\//, "");
-  const shareQuery = planSearchParams(plan, { share: true }).toString();
+  const shareQuery = planSearchParams(plan, { src: "share" }).toString();
+  const shown = model.totalFull;
   const icsQuery = planSearchParams(plan);
   icsQuery.set("d", nextMonthStart());
   const rows = yearRows(result);
@@ -58,24 +64,33 @@ export function CalculatorView({ plan, origin }) {
           <div className="pill">Free · no sign-up</div>
         </header>
 
-        <section id="calculator" aria-labelledby="page-title">
-          <h1 id="page-title">Compound Interest Calculator</h1>
-          <p className="subhead">See what your money becomes. Just keep compounding.</p>
+        <section
+          id="calculator"
+          aria-labelledby="page-title"
+          data-scenario={scenario || undefined}
+          data-plan={scenario ? planKey(plan) : undefined}
+        >
+          <h1 id="page-title">{title || "Compound Interest Calculator"}</h1>
+          <p className="subhead">{subhead || "See what your money becomes. Just keep compounding."}</p>
 
-          <section className="result" aria-live="polite">
+          <div className="pin" id="pin" aria-live="polite">
             <div className="eyebrow">Your money could grow to</div>
             <output
               className="big"
               id="big"
               name="balance"
               htmlFor="p-n m-n r-n y-n"
-              data-value={model.totalFull}
-              aria-label={model.totalFull}
-              dangerouslySetInnerHTML={{ __html: odometerHtml(model.totalFull) }}
+              data-value={shown}
+              aria-label={shown}
+              style={{ fontSize: `${totalFontSize(shown)}px` }}
+              dangerouslySetInnerHTML={{ __html: odometerHtml(shown) }}
             />
             <div className="sub">
               after <b id="yrsLbl">{years} {yearWord(years)}</b> at <b id="rateLbl">{formatRate(plan.r)}%</b> a year
             </div>
+          </div>
+
+          <section className="result" aria-live="polite">
             <div className="split">
               <div className="chip">
                 <div className="k"><span className="dot" style={{ background: "var(--sand-d)" }} />You put in</div>
@@ -108,7 +123,7 @@ export function CalculatorView({ plan, origin }) {
             <figcaption className="chart-cap">Each bar is a year. Sand is money you put in. Coral is interest.</figcaption>
           </figure>
 
-          <details className="table-toggle card" id="year-details">
+          <details className="table-toggle card" id="year-details" open={tableOpen || undefined}>
             <summary>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
               Show year-by-year table
@@ -183,8 +198,8 @@ export function CalculatorView({ plan, origin }) {
             <div className="pv" id="sh-total">{model.totalFull}</div>
             <div className="pk" id="sh-yrs">in {years} {yearWord(years)}</div>
           </div>
-          <div className="pp" id="sh-plan">
-            {formatFull(plan.p)} to start<br />
+            <div className="pp" id="sh-plan">
+            {formatMoney(plan.p)} to start<br />
             {formatFull(plan.m)} / month<br />
             {formatRate(plan.r)}% a year
           </div>
@@ -228,9 +243,9 @@ export function CalculatorView({ plan, origin }) {
 }
 
 function Field({ kind, label, plan, prefix, suffix, ticks }) {
-  const range = RANGES[kind];
   const value = plan[kind];
-  const pct = sliderPercent(value, range.min, range.max);
+  const min = kind === "y" ? RANGES.y.min : 0;
+  const pct = sliderPercent(kind, value);
   return (
     <div className="field" data-k={kind}>
       <div className="frow">
@@ -250,15 +265,20 @@ function Field({ kind, label, plan, prefix, suffix, ticks }) {
       <input
         type="range"
         id={`${kind}-r`}
-        min={range.min}
-        max={range.max}
-        step={range.step}
-        defaultValue={value}
+        min={min}
+        max={sliderMax(kind)}
+        step={1}
+        defaultValue={sliderPos(kind, value)}
         style={{ "--p": `${pct}%` }}
         aria-label={label}
       />
       {ticks ? (
-        <div className="ticks"><span>0%</span><span>5%</span><span>10%</span><span>15%</span></div>
+        <div className="ticks curve">
+          <span style={{ left: "0%" }}>0%</span>
+          <span style={{ left: "75%" }}>15%</span>
+          <span style={{ left: "88%" }}>30%</span>
+          <span style={{ left: "100%" }}>100%</span>
+        </div>
       ) : null}
     </div>
   );

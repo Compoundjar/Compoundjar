@@ -21,9 +21,9 @@ npm start
 
 ## What the page does
 
-- Inputs: starting amount, monthly deposit, yearly return, years, and compounding frequency. Results update as you move a slider.
+- Inputs: starting amount, monthly deposit, yearly return, years, and compounding frequency. Results update as you move a slider. Slider travel is piecewise: most of the track covers everyday amounts (about $0–$100K to start, $0–$5K a month, and 0–15%), and the rest reaches $50M, $100K a month, and 100%. Years run 1–50 on the slider. A typed or linked year can still be up to 80. The big total stays pinned while you scroll to the sliders, and very large totals use a short form such as $2.71B.
 - Query params: `p`, `m`, `r`, `y`, `f`. Missing params use the defaults ($1,000, $200/month, 7%, 30 years, monthly).
-- **Lock in this plan** shares a link tagged `s=1`, and offers a monthly calendar reminder (`.ics` plus Google Calendar).
+- **Lock in this plan** shares a link tagged `src=share`, including when the visitor arrived from another `src`. Marketing links use their own values (`tt-01`, `ig-01`, `x-01`, `yt-01`, `tt-bio`, `ig-bio`, `x-bio`, `rd-01`, `ph`). `src` is not part of the canonical URL. On the free analytics plan, visits are reported as `/src/{value}` so the Pages panel can split them. Custom events also send `src` for a paid plan. An old `s=1` link is treated as `src=share`.
 - `/og` draws the link-preview image for the same numbers. Crawlers get the title, description, and image in the HTML. They do not need JavaScript.
 - The document title and meta description stay the homepage SEO copy. `og:title`, `og:description`, and `og:url` stay specific to the plan in the URL. The canonical URL is always `https://compoundjar.com/`.
 
@@ -33,7 +33,7 @@ Import this repo in Vercel. Next.js is detected from `package.json`. No environm
 
 After the first deployment:
 
-1. Enable **Web Analytics** in the project dashboard. The page calls `track()` for `lock_plan_tap`, `share_copy`, and `calendar_add`. On the Hobby plan those custom events are not stored. Page views and referrers are. The script rewrites share visits to `/shared?s=1` and known AI referrers to `/ai/{slug}` so they show up in the Pages panel, which drops query strings. Custom events start recording if the project moves to Pro or Enterprise. Nothing else has to change in the code.
+1. Enable **Web Analytics** in the project dashboard. The page calls `track()` for `lock_plan_tap`, `share_copy`, `calendar_add`, and `scenario_page_view` (scenario pages only). On the Hobby plan those custom events are not stored. Page views and referrers are. The script rewrites a visit with `src` to `/src/{value}`, and a visit with no `src` but a known AI referrer to `/ai/{slug}`, because the Pages panel drops query strings. Custom events start recording if the project moves to Pro or Enterprise. Nothing else has to change in the code.
 2. Add `compoundjar.com`. `www.compoundjar.com` already 301s to the apex.
 3. When the domain answers, submit the homepage to IndexNow:
 
@@ -51,12 +51,12 @@ Search Console and Bing Webmaster Tools are separate dashboard steps.
 
 - Words on the homepage: `content/home.js`. Dollar amounts in the examples and FAQs are computed in that file from `lib/plan.js`. Do not paste balances by hand.
 - Social profiles for Organization `sameAs`: `content/social.js`.
-- Scenario pages are not built yet. Add an entry to `content/scenarios.js`, then add `app/[slug]/page.js` that looks the slug up with `findScenario()`. Give that page its own canonical and, later, a `scenario_page_view` event. The sitemap already includes whatever is in the list.
-- Footer pages (About, Methodology, Privacy) are not built yet. Add `{ href, label }` entries to `content/footer.js` when those routes exist.
+- Scenario pages live in `content/scenarios.js`. `app/[slug]/page.js` renders one curated plan per slug, with its own canonical URL and a `scenario_page_view` event. Do not add a page for a share link. The five launch slugs use placeholder copy. Marketing replaces the words. The sitemap already includes the list.
+- Footer pages are About, Methodology, Privacy, and Disclaimer. Edit the words in `content/pages.js`. Each page shows the last-updated date.
 
 ## Lighthouse
 
-A throttled mobile run of the production build on localhost scored 99 performance, 100 accessibility, 100 best practices, and 100 SEO. Largest Contentful Paint was 2.0s, cumulative layout shift was 0.008, and total blocking time was 51ms.
+A throttled mobile run of the production build on localhost scored 97 performance, 100 accessibility, 100 best practices, and 100 SEO. Largest Contentful Paint was 2.4s, cumulative layout shift was 0.008, and total blocking time was 86ms.
 
 ## Analytics hosts
 
