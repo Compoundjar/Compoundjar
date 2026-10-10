@@ -185,7 +185,7 @@ export const waitingNote = `Starting ten years later costs about ${waitingGapTex
 
 export const frequencyNote = `Going from monthly to daily compounding adds just ${defaultDailyGapText} over ${DEFAULTS.y} years on the default plan, about ${defaultDailyGapPct}%. How much you deposit, the rate you earn and how long you stay invested matter far more than how often interest compounds. More: [Daily compound interest calculator](/daily-compound-interest-calculator).`;
 
-export const depositColumnLabel = `${money(DEFAULTS.p)} + ${money(DEFAULTS.m)}/month`;
+export const depositColumnLabel = `${money(DEFAULTS.p)} + ${money(DEFAULTS.m)}/month (default plan)`;
 
 export const returnBullets = [
   "U.S. stocks (S&P 500), long run. From 1928 to 2025, the S&P 500 with dividends reinvested returned about 10.0% a year compounded (a simple average of the yearly returns is about 11.9%). That's our calculation from NYU Stern's annual return data ([Damodaran, NYU Stern, updated Jan 2026](https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html)). The ride was bumpy: 26 of those 98 years were negative, including −43.8% in 1931 and −36.6% in 2008.",
@@ -252,6 +252,7 @@ export const popularScenarios = [
 
 const reach500 = formatMonths(monthsToTarget({ p: 0, m: 500, r: 7, f: 12 }, 1_000_000));
 const reach1000 = formatMonths(monthsToTarget({ p: 0, m: 1000, r: 7, f: 12 }, 1_000_000));
+const reachDefault = formatMonths(monthsToTarget(DEFAULTS, 1_000_000));
 const pmtMillion = money(paymentNeeded(1_000_000, { p: 0, r: 7, y: 30 }));
 
 export const pageDisclaimer =
@@ -287,7 +288,7 @@ export const faqs = [
   },
   {
     q: "How long will it take to reach $1 million?",
-    a: `At 7%, starting from $0: about ${reach500} at $500 a month, or ${reach1000} at $1,000 a month. To get there in exactly 30 years, you'd need about ${pmtMillion} a month. See [How long to reach $1 million](/how-long-to-reach-1-million).`,
+    a: `At 7%, starting from $0: about ${reach500} at $500 a month, or ${reach1000} at $1,000 a month. To get there in exactly 30 years, you'd need about ${pmtMillion} a month. Our default plan, ${money(DEFAULTS.p)} plus ${money(DEFAULTS.m)} a month, crosses $1 million in about ${reachDefault}. See [How long to reach $1 million](/how-long-to-reach-1-million).`,
   },
   {
     q: "Does this account for inflation and taxes?",

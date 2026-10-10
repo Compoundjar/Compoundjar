@@ -30,6 +30,7 @@ import { staticPages } from "./pages.js";
 import { findScenario, scenarios } from "./scenarios.js";
 import {
   DEFAULTS,
+  answerSentence,
   exactDoublingYears,
   formatFull,
   formatMonths,
@@ -81,7 +82,7 @@ describe("default plan", () => {
     assert.match(howToSteps[1].body, /Default: \$800/);
     assert.match(howToSteps[2].body, /Default: 7%/);
     assert.match(howToSteps[3].body, /Default: 30/);
-    assert.equal(depositColumnLabel, "$5,000 + $800/month");
+    assert.equal(depositColumnLabel, "$5,000 + $800/month (default plan)");
     const four = project({ ...DEFAULTS, r: 4 });
     assert.equal(fourPercentText, money(four.bal));
     assert.equal(fourPercentText, "$571,807");
@@ -164,6 +165,15 @@ describe("homepage figures", () => {
     assert.match(million.a, /36 years, 5 months/);
     assert.match(million.a, /27 years, 7 months/);
     assert.match(million.a, /\$820 a month/);
+    assert.match(million.a, /29 years, 10 months/);
+    assert.equal(
+      formatMonths(monthsToTarget(DEFAULTS, 1_000_000)),
+      "29 years, 10 months",
+    );
+    assert.match(answerSentence(DEFAULTS), /makes you a millionaire, at an assumed 7%/);
+    const nominal = project(DEFAULTS).bal;
+    assert.equal(fourPercentText, formatFull(project({ ...DEFAULTS, r: 4 }).bal));
+    assert.notEqual(formatFull(nominal / 1.03 ** 30), fourPercentText);
     assert.equal(ruleOf72(7).toFixed(1), "10.3");
     assert.equal(exactDoublingYears(8).toFixed(1).slice(0, 3), "9.0");
   });
