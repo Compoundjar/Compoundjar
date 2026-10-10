@@ -8,7 +8,7 @@ import { SiteFooter } from "../../components/site-footer.js";
 import { faqPlain } from "../../content/home.js";
 import { findScenario, scenarios } from "../../content/scenarios.js";
 import { isPreviewHost, requestHost, requestOrigin } from "../../lib/http.js";
-import { previewModel, readSrc } from "../../lib/plan.js";
+import { previewModel, readSrc, readStartYear } from "../../lib/plan.js";
 import { TWITTER_SITE, buildPageMeta, buildScenarioJsonLd } from "../../lib/seo.js";
 
 export function generateStaticParams() {
@@ -22,11 +22,13 @@ export async function generateMetadata({ params, searchParams }) {
   const query = await searchParams;
   const headerList = await headers();
   const origin = requestOrigin(headerList);
+  const startYear = readStartYear(query);
   const meta = buildPageMeta({
-    model: previewModel(scenario.plan),
+    model: previewModel(scenario.plan, { startYear }),
     plan: scenario.plan,
     origin,
     src: readSrc(query),
+    startYear,
     indexable: !isPreviewHost(requestHost(headerList)),
     canonical: `https://compoundjar.com/${scenario.slug}`,
     title: scenario.title,

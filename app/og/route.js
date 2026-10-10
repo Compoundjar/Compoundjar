@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { parsePlan, previewModel } from "../../lib/plan.js";
+import { parsePlan, previewModel, readStartYear } from "../../lib/plan.js";
 
 function loadFont(name) {
   const buf = readFileSync(join(process.cwd(), "assets/fonts", name));
@@ -14,16 +14,17 @@ const inter600 = loadFont("Inter-600.ttf");
 
 function headlineSize(text) {
   const chars = String(text).length;
-  if (chars <= 6) return 120;
-  if (chars <= 8) return 96;
-  if (chars <= 11) return 76;
-  return 56;
+  if (chars <= 16) return 80;
+  if (chars <= 24) return 64;
+  if (chars <= 36) return 54;
+  return 46;
 }
 
 export async function GET(request) {
   const plan = parsePlan(request.nextUrl.searchParams);
-  const model = previewModel(plan);
-  const totalSize = headlineSize(model.total);
+  const startYear = readStartYear(request.nextUrl.searchParams);
+  const model = previewModel(plan, { startYear });
+  const totalSize = headlineSize(model.imageHeadline);
   return new ImageResponse(
     (
       <div
@@ -45,35 +46,25 @@ export async function GET(request) {
             paddingRight: "36px",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                fontFamily: "Inter",
-                fontWeight: 500,
-                fontSize: 36,
-                color: "#6B645A",
-              }}
-            >
-              My jar hits
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", width: 740 }}>
             <div
               style={{
                 fontFamily: "Fraunces",
                 fontWeight: 600,
                 fontSize: totalSize,
-                lineHeight: 1,
-                letterSpacing: "-0.04em",
-                marginTop: 12,
+                lineHeight: 1.05,
+                letterSpacing: "-0.03em",
               }}
             >
-              {model.total}
+              {model.imageHeadline}
             </div>
             <div
               style={{
                 fontFamily: "Inter",
                 fontWeight: 500,
                 fontSize: 32,
-                marginTop: 22,
+                lineHeight: 1.3,
+                marginTop: 28,
                 color: "#1D1B18",
               }}
             >

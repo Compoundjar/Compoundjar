@@ -14,6 +14,7 @@ import {
   googleCalendarUrl,
   nextMonthStart,
   parsePlan,
+  parseStartYear,
   planKey,
   planSearchParams,
   previewModel,
@@ -86,6 +87,7 @@ function mount() {
     const value = arrival.get(key);
     if (value) extra.set(key, value);
   }
+  const arrivalStart = parseStartYear(arrival);
   const S = scenarioKey ? JSON.parse(scenarioKey) : parsePlan(arrival);
   let reminder = "ics";
   let lastStr = $("big")?.dataset.value || "";
@@ -114,14 +116,18 @@ function mount() {
     };
   }
 
+  function shareYear() {
+    return new Date().getFullYear();
+  }
+
   function planQuery() {
-    const params = planSearchParams(canonical(), { src });
+    const params = planSearchParams(canonical(), { src, startYear: arrivalStart });
     for (const [key, value] of extra) params.set(key, value);
     return params;
   }
 
   function absoluteShareUrl() {
-    return `${location.origin}/?${planSearchParams(canonical(), { src: "share" }).toString()}`;
+    return `${location.origin}/?${planSearchParams(canonical(), { src: "share", startYear: shareYear() }).toString()}`;
   }
 
   function odometer(str) {
@@ -209,7 +215,7 @@ function mount() {
   function render() {
     const plan = { ...S };
     const result = project(plan);
-    const model = previewModel(canonical());
+    const model = previewModel(canonical(), { startYear: shareYear() });
     const years = Math.round(S.y);
     const shown = formatHeadline(result.bal);
     odometer(shown);
@@ -228,6 +234,7 @@ function mount() {
     if (onScenario) {
       const params = new URLSearchParams();
       if (src) params.set("src", src);
+      if (arrivalStart) params.set("t", String(arrivalStart));
       for (const [key, value] of extra) params.set(key, value);
       const query = params.toString();
       next = `${location.pathname}${query ? `?${query}` : ""}${hash}`;
@@ -240,9 +247,10 @@ function mount() {
     $("sh-total").textContent = shown;
     $("sh-yrs").textContent = `in ${years} ${yearWord(years)}`;
     $("sh-plan").innerHTML = `${formatMoney(S.p)} to start<br>${formatFull(S.m)} / month<br>${formatRate(S.r)}% a year`;
-    $("sh-link").textContent = `${location.host}/?${planSearchParams(canonical(), { src: "share" }).toString()}`;
+    const shareUrl = absoluteShareUrl();
+    $("sh-link").textContent = shareUrl.replace(/^https?:\/\//, "");
     $("sheet").dataset.shareText = model.shareText;
-    $("sheet").dataset.shareUrl = absoluteShareUrl();
+    $("sheet").dataset.shareUrl = shareUrl;
     syncConfirm();
   }
 
@@ -326,7 +334,7 @@ function mount() {
   if (navigator.share) $("share").hidden = false;
   $("share").addEventListener("click", async () => {
     const url = absoluteShareUrl();
-    const text = previewModel(canonical()).shareText;
+    const text = previewModel(canonical(), { startYear: shareYear() }).shareText;
     try {
       await navigator.share({ title: "Compound Jar", text, url });
       trackEvent("share_copy", { method: "share" });

@@ -6,7 +6,7 @@ import { JsonLd } from "../components/json-ld.js";
 import { faqPlain, faqs } from "../content/home.js";
 import { sameAs } from "../content/social.js";
 import { isPreviewHost, requestHost, requestOrigin } from "../lib/http.js";
-import { parsePlan, previewModel, readSrc } from "../lib/plan.js";
+import { parsePlan, previewModel, readSrc, readStartYear } from "../lib/plan.js";
 import { TWITTER_SITE, buildJsonLd, buildPageMeta } from "../lib/seo.js";
 
 export async function generateMetadata({ searchParams }) {
@@ -14,11 +14,13 @@ export async function generateMetadata({ searchParams }) {
   const headerList = await headers();
   const origin = requestOrigin(headerList);
   const plan = parsePlan(params);
+  const startYear = readStartYear(params);
   const meta = buildPageMeta({
-    model: previewModel(plan),
+    model: previewModel(plan, { startYear }),
     plan,
     origin,
     src: readSrc(params),
+    startYear,
     indexable: !isPreviewHost(requestHost(headerList)),
   });
   const index = meta.robots.startsWith("index");

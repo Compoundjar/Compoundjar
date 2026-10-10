@@ -41,10 +41,11 @@ function Logo() {
 
 export function CalculatorView({ plan, origin, title, subhead, scenario, tableOpen = false }) {
   const result = project(plan);
-  const model = previewModel(plan);
+  const shareYear = new Date().getFullYear();
+  const model = previewModel(plan, { startYear: shareYear });
   const years = plan.y;
   const host = origin.replace(/^https?:\/\//, "");
-  const shareQuery = planSearchParams(plan, { src: "share" }).toString();
+  const shareQuery = planSearchParams(plan, { src: "share", startYear: shareYear }).toString();
   const shown = formatHeadline(result.bal);
   const icsQuery = planSearchParams(plan);
   icsQuery.set("d", nextMonthStart());
