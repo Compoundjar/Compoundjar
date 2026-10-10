@@ -26,7 +26,9 @@ export const staticPages = {
       formulaParagraphs.annuity,
       formulaParagraphs.timing,
       formulaParagraphs.worked,
+      formulaParagraphs.rearrange,
       "When you pick a compounding frequency other than monthly, Compound Jar converts the yearly rate into an equivalent monthly growth factor, (1 + r/n)^(n/12), so your monthly deposits still line up.",
+      formulaParagraphs.daily,
     ],
   },
   privacy: {

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { parsePlan, previewModel, readStartYear } from "../../lib/plan.js";
+import { parsePlan, previewModel, readShareDate } from "../../lib/plan.js";
 
 function loadFont(name) {
   const buf = readFileSync(join(process.cwd(), "assets/fonts", name));
@@ -22,8 +22,8 @@ function headlineSize(text) {
 
 export async function GET(request) {
   const plan = parsePlan(request.nextUrl.searchParams);
-  const startYear = readStartYear(request.nextUrl.searchParams);
-  const model = previewModel(plan, { startYear });
+  const shareDate = readShareDate(request.nextUrl.searchParams);
+  const model = previewModel(plan, { shareDate });
   const totalSize = headlineSize(model.imageHeadline);
   return new ImageResponse(
     (
@@ -62,20 +62,34 @@ export async function GET(request) {
               style={{
                 fontFamily: "Inter",
                 fontWeight: 500,
-                fontSize: 32,
+                fontSize: 30,
                 lineHeight: 1.3,
-                marginTop: 28,
+                marginTop: 24,
                 color: "#1D1B18",
               }}
             >
               {model.imageSub}
             </div>
+            {model.imageNote ? (
+              <div
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 500,
+                  fontSize: 26,
+                  lineHeight: 1.3,
+                  marginTop: 16,
+                  color: "#1D1B18",
+                }}
+              >
+                {model.imageNote}
+              </div>
+            ) : null}
           </div>
           <div
             style={{
               fontFamily: "Inter",
               fontWeight: 600,
-              fontSize: 26,
+              fontSize: 22,
               color: "#F26B3A",
             }}
           >
@@ -108,11 +122,23 @@ export async function GET(request) {
                 border: "8px solid #1D1B18",
                 borderRadius: 88,
                 display: "flex",
-                alignItems: "flex-end",
+                flexDirection: "column",
+                justifyContent: "flex-end",
                 overflow: "hidden",
               }}
             >
-              <div style={{ width: "100%", height: 158, background: "#F26B3A" }} />
+              {model.full ? (
+                <div style={{ width: "100%", height: 252, background: "#F26B3A" }} />
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                  <div style={{ display: "flex", width: "100%", justifyContent: "space-between", marginBottom: 28 }}>
+                    {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((dot) => (
+                      <div key={dot} style={{ width: 12, height: 8, background: "#F26B3A" }} />
+                    ))}
+                  </div>
+                  <div style={{ width: "100%", height: 118, background: "#F26B3A" }} />
+                </div>
+              )}
             </div>
           </div>
         </div>

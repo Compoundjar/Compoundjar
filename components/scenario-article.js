@@ -37,18 +37,17 @@ export function ScenarioArticle({ scenario }) {
           ))}
         </div>
         <p>
-          <a href={scenario.links[0].href}>{scenario.links[0].label} →</a>
+          <a href={scenario.links[0].href}>{scenario.links[0].label}</a>
         </p>
         <p>
-          {scenario.linkLead}{" "}
-          <a href={scenario.links[1].href}>{scenario.links[1].label}</a>
+          Or open the full <a href={scenario.links[1].href}>{scenario.links[1].label}</a>
           {" "}
-          and try your own numbers.
+          and find your own path to $1M.
         </p>
         <p className="updated">
           Last updated <time dateTime={contentUpdated}>{contentUpdatedLabel}</time>
           {" · "}
-          Projections, not promises. Assumes a steady yearly return, monthly compounding and end-of-month deposits, before taxes, fees and inflation. Educational only, not financial advice. <a href="/methodology">Methodology</a>
+          Projections, not promises. 7% is an assumption, not a guarantee. Assumes a steady yearly return, monthly compounding and end-of-month deposits, before taxes, fees and inflation. Educational only, not financial advice. <a href="/methodology">Methodology</a>
         </p>
       </article>
     </div>

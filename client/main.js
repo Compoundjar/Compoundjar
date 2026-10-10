@@ -12,13 +12,14 @@ import {
   formatMoney,
   formatRate,
   googleCalendarUrl,
+  formatShareStamp,
   nextMonthStart,
   parsePlan,
-  parseStartYear,
   planKey,
   planSearchParams,
   previewModel,
   project,
+  readShareStamp,
   readSrc,
   sliderPos,
   sliderValue,
@@ -87,7 +88,7 @@ function mount() {
     const value = arrival.get(key);
     if (value) extra.set(key, value);
   }
-  const arrivalStart = parseStartYear(arrival);
+  const arrivalStamp = readShareStamp(arrival);
   const S = scenarioKey ? JSON.parse(scenarioKey) : parsePlan(arrival);
   let reminder = "ics";
   let lastStr = $("big")?.dataset.value || "";
@@ -116,18 +117,19 @@ function mount() {
     };
   }
 
-  function shareYear() {
-    return new Date().getFullYear();
+  function shareDateNow() {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
   }
 
   function planQuery() {
-    const params = planSearchParams(canonical(), { src, startYear: arrivalStart });
+    const params = planSearchParams(canonical(), { src, shareDate: arrivalStamp || null });
     for (const [key, value] of extra) params.set(key, value);
     return params;
   }
 
   function absoluteShareUrl() {
-    return `${location.origin}/?${planSearchParams(canonical(), { src: "share", startYear: shareYear() }).toString()}`;
+    return `${location.origin}/?${planSearchParams(canonical(), { src: "share", shareDate: formatShareStamp(shareDateNow()) }).toString()}`;
   }
 
   function odometer(str) {
@@ -215,7 +217,7 @@ function mount() {
   function render() {
     const plan = { ...S };
     const result = project(plan);
-    const model = previewModel(canonical(), { startYear: shareYear() });
+    const model = previewModel(canonical(), { shareDate: shareDateNow(), origin: location.origin });
     const years = Math.round(S.y);
     const shown = formatHeadline(result.bal);
     odometer(shown);
@@ -234,7 +236,7 @@ function mount() {
     if (onScenario) {
       const params = new URLSearchParams();
       if (src) params.set("src", src);
-      if (arrivalStart) params.set("t", String(arrivalStart));
+      if (arrivalStamp) params.set("t", arrivalStamp);
       for (const [key, value] of extra) params.set(key, value);
       const query = params.toString();
       next = `${location.pathname}${query ? `?${query}` : ""}${hash}`;
@@ -334,7 +336,7 @@ function mount() {
   if (navigator.share) $("share").hidden = false;
   $("share").addEventListener("click", async () => {
     const url = absoluteShareUrl();
-    const text = previewModel(canonical(), { startYear: shareYear() }).shareText;
+    const text = previewModel(canonical(), { shareDate: shareDateNow(), origin: location.origin }).shareText;
     try {
       await navigator.share({ title: "Compound Jar", text, url });
       trackEvent("share_copy", { method: "share" });

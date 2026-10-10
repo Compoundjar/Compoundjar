@@ -8,8 +8,8 @@ import {
   formatFull,
   formatMonths,
   formatRate,
+  monthlyNeeded,
   monthsToTarget,
-  paymentNeeded,
   project,
   ruleOf72,
 } from "../lib/plan.js";
@@ -23,6 +23,14 @@ const rateText = (rate) => `${formatRate(rate)}%`;
 function yearsLabel(n) {
   const rounded = Math.round(n * 10) / 10;
   return `${rounded.toFixed(1)} years`;
+}
+
+function timeTo(plan, target = 1_000_000) {
+  return formatMonths(monthsToTarget({ f: 12, ...plan }, target, 1200));
+}
+
+function needed(years, rate, start = 0) {
+  return money(monthlyNeeded(1_000_000, { p: start, r: rate, y: years, f: 12 }));
 }
 
 export function workedDefault() {
@@ -41,120 +49,94 @@ export function workedDefault() {
   };
 }
 
-const lumpPlan = { p: 10000, m: 0, r: 7, f: 12 };
-const monthlyPlan = { p: 0, r: 7, y: 30, f: 12 };
-const waitingBase = { p: 0, m: 300, r: 7, f: 12 };
-
-function rowBalance(plan) {
-  const result = project(plan);
-  return {
-    plan,
-    balance: money(result.bal),
-    contributed: money(result.con),
-    growth: money(result.int),
-    result,
-  };
-}
-
-export const lumpRows = [10, 20, 30].map((years) => ({
-  label: String(years),
-  ...rowBalance({ ...lumpPlan, y: years }),
-}));
-
-export const monthlyRows = [200, 500, 1000].map((monthly) => ({
-  label: money(monthly),
-  ...rowBalance({ ...monthlyPlan, m: monthly }),
-}));
-
-const startAt25 = rowBalance({ ...waitingBase, y: 40 });
-const startAt35 = rowBalance({ ...waitingBase, y: 30 });
-const waitingGap = startAt25.result.bal - startAt35.result.bal;
-const catchUp = paymentNeeded(startAt25.result.bal, { p: 0, r: 7, y: 30 });
-
-export const waitingRows = [
-  { label: "25", years: "40", ...startAt25 },
-  { label: "35", years: "30", ...startAt35 },
-];
-
-export const waitingGapText = money(waitingGap);
-export const catchUpText = money(catchUp);
-export const depositGapText = money(startAt25.result.con - startAt35.result.con);
-
-const freqLabels = [
-  [1, "Yearly"],
-  [4, "Quarterly"],
-  [12, "Monthly"],
-  [365, "Daily"],
-];
-
-export const frequencyRows = freqLabels.map(([f, label]) => ({
-  label,
-  f,
-  lump: money(project({ ...lumpPlan, y: 30, f }).bal),
-  deposits: money(project({ ...DEFAULTS, f }).bal),
-}));
-
-const defaultMonthly = project(DEFAULTS);
+const defaultResult = project(DEFAULTS);
 const defaultDaily = project({ ...DEFAULTS, f: 365 });
-const defaultYearly = project({ ...DEFAULTS, f: 1 });
-const dailyGap = defaultDaily.bal - defaultMonthly.bal;
-const dailyGapPct = (dailyGap / defaultMonthly.bal) * 100;
-
-export const defaultDailyGapText = money(dailyGap);
-export const defaultDailyGapPct = dailyGapPct.toFixed(1);
-
 const fourPct = project({ ...DEFAULTS, r: 4 });
+const lump125 = project({ p: 125_000, m: 0, r: 7, y: 30, f: 12 });
+
+export const defaultBalanceText = money(defaultResult.bal);
+export const defaultContributionText = money(defaultResult.con);
+export const defaultGrowthText = money(defaultResult.int);
+export const defaultCrossText = timeTo(DEFAULTS);
+export const defaultDailyGapText = money(defaultDaily.bal - defaultResult.bal);
+export const defaultDailyTimeText = timeTo({ ...DEFAULTS, f: 365 });
 export const fourPercentText = money(fourPct.bal);
-export const defaultBalanceText = money(defaultMonthly.bal);
-export const defaultContributionText = money(defaultMonthly.con);
-export const defaultGrowthText = money(defaultMonthly.int);
+export const lump125Text = money(lump125.bal);
+export const realMillionMonthly = needed(30, 4, DEFAULTS.p);
+export const inflationMillion = money(1_000_000 / 1.03 ** 30);
 
-const lumpYearly = project({ ...lumpPlan, y: 30, f: 1 });
-const lumpMonthly = project({ ...lumpPlan, y: 30, f: 12 });
-const lumpDaily = project({ ...lumpPlan, y: 30, f: 365 });
-export const lumpFrequency = {
-  yearly: money(lumpYearly.bal),
-  monthly: money(lumpMonthly.bal),
-  dailyAdds: money(lumpDaily.bal - lumpMonthly.bal),
-};
+export const intro =
+  "Tell us your starting amount. Tell us what you think you can save each month. This compound interest calculator shows whether your jar can reach $1 million, how long it might take, and what would get you there sooner. No hot tips, no casino energy, no login. Just steady deposits, time and math you can check. Turns out boring is the new rebellious. Just keep compounding.";
 
-const fiveHundred = (years) => project({ p: 0, m: 500, r: 7, y: years, f: 12 });
-
-export const ruleRates = [4, 6, 7, 8, 10, 12];
-export const ruleRows = ruleRates.map((rate) => ({
-  rate: `${rate}%`,
-  estimate: yearsLabel(ruleOf72(rate)),
-  exact: yearsLabel(exactDoublingYears(rate)),
-}));
+export const pathNote =
+  "Becoming a millionaire usually isn't about a lucky pick or perfect timing. It comes down to three things you control (what you start with, what you add each month and how long you stay invested) and one you don't: the return. We've all felt the pull of the next big thing. The quietly rebellious move is the patient one: steady deposits you can actually plan around, even though no return is guaranteed.";
 
 export const howToSteps = [
   {
-    title: "Starting amount",
-    body: `What you have saved or invested today. Zero is fine. Everyone starts somewhere. (Default: ${money(DEFAULTS.p)}.)`,
+    title: "What you have",
+    body: `Enter what you've invested today. Zero is a fine place to start. (The example starts at ${money(DEFAULTS.p)}.)`,
   },
   {
-    title: "Monthly deposit",
-    body: `What you plan to add each month. Even $25 shows up on the chart. (Default: ${money(DEFAULTS.m)}.)`,
+    title: "What you can save",
+    body: `Enter the monthly amount you think you can keep up. This is the biggest lever you control. (The example uses ${money(DEFAULTS.m)}.)`,
   },
   {
     title: "Yearly return",
-    body: `The average annual growth rate you want to test. Not sure? See [What return should I use?](#returns) below. (Default: ${rateText(DEFAULTS.r)}.)`,
+    body: `The average annual growth you want to assume. Test a cautious and a hopeful rate. See [What return should I use?](#returns) below. (The example uses ${rateText(DEFAULTS.r)}, an assumption, not a guarantee.)`,
   },
   {
     title: "Years",
-    body: `How long you'll let it grow. Try 10, 20 and 30 to see how much time matters. (Default: ${DEFAULTS.y}.)`,
+    body: `How long you're willing to let it grow. Try 20, 30 and 40. (The example uses ${DEFAULTS.y}.)`,
   },
   {
     title: "Compounding frequency (optional)",
-    body: "Under Advanced, choose yearly, quarterly, monthly or daily. Monthly is the default and matches the way deposits work here.",
+    body: "Under Advanced, choose yearly, quarterly, monthly or daily. Monthly matches monthly deposits.",
   },
 ];
+
+export const howToClose =
+  "If the big number reads $1,000,000 or more, you're on track for $1M under those assumptions. If not, nudge the monthly deposit or the years until it does. That's your path. Tap Lock in this plan to save your link and set a monthly calendar reminder.";
+
+const gridStarts = [0, 10_000, 25_000, 50_000, 100_000];
+const gridSaves = [300, 500, 800, 1_000, 1_500];
+
+export const haveSaveHeaders = ["What you have", ...gridSaves.map((m) => `${money(m)}/mo`)];
+export const haveSaveRows = gridStarts.map((start) => [
+  money(start),
+  ...gridSaves.map((monthly) => timeTo({ p: start, m: monthly, r: 7 })),
+]);
+
+const saveYears = [20, 25, 30, 35, 40];
+const saveRates = [5, 7, 10];
+
+export const saveHeaders = ["Years to $1M", ...saveRates.map((rate) => `at ${rate}%`)];
+export const saveRows = saveYears.map((years) => [
+  String(years),
+  ...saveRates.map((rate) => needed(years, rate)),
+]);
+
+export const saveNote = `Time is the cheat code. At 7%, giving yourself 40 years instead of 20 cuts the monthly deposit from ${needed(20, 7)} to ${needed(40, 7)}. More: [How much to save a month to be a millionaire](/how-much-to-save-a-month-to-be-a-millionaire).`;
+
+const longDeposits = [300, 500, 800, 1_000, 1_500];
+export const longHeaders = ["Monthly deposit", ...saveRates.map((rate) => `at ${rate}%`)];
+export const longRows = longDeposits.map((monthly) => [
+  money(monthly),
+  ...saveRates.map((rate) => timeTo({ p: 0, m: monthly, r: rate })),
+]);
+
+export const ageHeaders = ["Start age", ...saveRates.map((rate) => `at ${rate}%`)];
+export const ageRows = [
+  ["25", ...saveRates.map((rate) => `${needed(40, rate)}/mo`)],
+  ["35", ...saveRates.map((rate) => `${needed(30, rate)}/mo`)],
+];
+
+export const ageNote = `At 7%, waiting ten years more than doubles the monthly deposit, from ${needed(40, 7)} to ${needed(30, 7)}. More: [Become a millionaire by 50](/become-a-millionaire-by-50).`;
 
 const worked = workedDefault();
 
 export const formulaParagraphs = {
   intro:
-    "Compound interest means you earn interest on your interest. Each period, growth is added to the jar, and the next period's growth is calculated on the bigger total.",
+    "Compound interest means you earn returns on your returns. Each period, growth is added to the jar, and the next period's growth is calculated on the bigger total. That snowball is how ordinary monthly deposits can turn into $1 million.",
   lumpLead: "For a single starting amount:",
   lump: "A = P(1 + r/n)^(nt)",
   variables: [
@@ -164,40 +146,62 @@ export const formulaParagraphs = {
     "n = how many times per year interest compounds (12 for monthly)",
     "t = the number of years",
   ],
-  annuityLead: "With a regular monthly deposit added, the formula becomes:",
+  annuityLead: "With a regular monthly deposit added:",
   annuity: "FV = P(1 + r/n)^(nt) + PMT × [((1 + r/n)^(nt) − 1) / (r/n)]",
   timing:
     "where PMT is the monthly deposit. This version assumes deposits land at the end of each month, which is what Compound Jar uses. If you deposit at the start of each month, multiply the deposit part by (1 + r/n). That gives each deposit one extra month to grow, so the result comes out slightly higher.",
-  worked: `Worked through for the default plan: (1 + ${worked.rateDecimal}/12)^${worked.exponent} ≈ ${worked.factorText}. The ${money(DEFAULTS.p)} grows to ${worked.lump}. The ${money(DEFAULTS.m)} deposits grow to ${worked.deposits}. Together that's ${worked.together} (each part rounded to the dollar).`,
+  worked: `Worked through for the starting example: (1 + ${worked.rateDecimal}/12)^${worked.exponent} ≈ ${worked.factorText}. The ${money(DEFAULTS.p)} grows to ${worked.lump}. The ${money(DEFAULTS.m)} deposits grow to ${worked.deposits}. Together that's ${worked.together} (each part rounded to the dollar), just over $1 million.`,
+  rearrange:
+    "To find the monthly deposit that reaches a goal, rearrange the formula: PMT = (Goal − P(1 + r/n)^(nt)) × (r/n) / ((1 + r/n)^(nt) − 1). That's how the \"monthly needed\" table above is calculated.",
   otherFrequency:
     "When you pick a compounding frequency other than monthly, Compound Jar converts the yearly rate into an equivalent monthly growth factor, (1 + r/n)^(n/12), so your monthly deposits still line up. The full method is on our [Methodology](/methodology) page.",
+  daily: `Does daily compounding get you to $1M faster? Barely. In the starting example, daily beats monthly by ${defaultDailyGapText} over 30 years and reaches $1M about a month sooner (${defaultDailyTimeText} vs ${timeTo(DEFAULTS)}). What you save and how long you stay invested move the finish line far more.`,
 };
-
-const lump20 = lumpRows[1];
-const lump30 = lumpRows[2];
-const lastDecade = lump30.result.bal - lump20.result.bal;
-
-export const lumpNote = `The money roughly doubles every 10 years. The last decade adds ${money(lastDecade)}, more than the first two decades combined (${lump20.growth}).`;
-
-export const monthlyNote = "In every row, about 70% of the ending balance is growth rather than deposits.";
-
-export const waitingNote = `Starting ten years later costs about ${waitingGapText} by 65, even though the difference in deposits is only ${depositGapText}. To catch up, the 35-year-old would need to deposit about ${catchUpText} a month instead of ${money(waitingBase.m)}. More on this: [Cost of waiting: start at 25 vs 35](/cost-of-waiting-start-at-25-vs-35).`;
-
-export const frequencyNote = `Going from monthly to daily compounding adds just ${defaultDailyGapText} over ${DEFAULTS.y} years on the default plan, about ${defaultDailyGapPct}%. How much you deposit, the rate you earn and how long you stay invested matter far more than how often interest compounds. More: [Daily compound interest calculator](/daily-compound-interest-calculator).`;
-
-export const depositColumnLabel = `${money(DEFAULTS.p)} + ${money(DEFAULTS.m)}/month (default plan)`;
 
 export const returnBullets = [
   "U.S. stocks (S&P 500), long run. From 1928 to 2025, the S&P 500 with dividends reinvested returned about 10.0% a year compounded (a simple average of the yearly returns is about 11.9%). That's our calculation from NYU Stern's annual return data ([Damodaran, NYU Stern, updated Jan 2026](https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html)). The ride was bumpy: 26 of those 98 years were negative, including −43.8% in 1931 and −36.6% in 2008.",
   "Inflation, long run. Consumer prices (CPI-U) rose about 3.0% a year from December 1927 to December 2025. That's our calculation from the BLS index via [FRED (series CPIAUCNS)](https://fred.stlouisfed.org/series/CPIAUCNS). After that inflation, the S&P 500's ~10.0% works out to roughly 6.8% a year in today's dollars. That's one reason our default is 7%.",
   "Inflation, now. CPI-U rose 3.4% over the 12 months ending August 2026 ([BLS CPI release, Sept. 11, 2026](https://www.bls.gov/news.release/cpi.nr0.htm)). The Federal Reserve targets 2% inflation over the longer run ([Federal Reserve](https://www.federalreserve.gov/faqs/economy_14400.htm)).",
-  "Savings accounts. The FDIC's national average savings rate was 0.37% in its September 21, 2026 update ([FDIC national rates](https://www.fdic.gov/national-rates-and-rate-caps)). Some high-yield accounts pay much more, so check your own bank's current APY and use that.",
+  "Savings accounts. The FDIC's national average savings rate was 0.37% in its September 21, 2026 update ([FDIC national rates](https://www.fdic.gov/national-rates-and-rate-caps)). At savings-account rates, $1M takes far longer, so check your own account's current APY.",
 ];
 
-export const todayDollars = `Want a "today's dollars" view? A rough shortcut is to subtract expected inflation from your return. For example, use 4% instead of ${rateText(DEFAULTS.r)} if you expect about 3% inflation. At 4%, the default plan comes to about ${fourPercentText} in today's purchasing power, compared with ${defaultBalanceText} at ${rateText(DEFAULTS.r)} in future dollars.`;
+export const todayDollars = `A future million isn't today's million. At about 3% inflation, $1,000,000 thirty years from now buys roughly what ${inflationMillion} buys today. For a "today's dollars" view, lower the return by your expected inflation. At 4% instead of 7%, the starting example comes to about ${fourPercentText}. To reach a real $1M at 4%, you'd need about ${realMillionMonthly} a month for 30 years.`;
 
 export const returnCaveat =
-  "Past returns don't guarantee future ones, and real investments come with fees and taxes that this calculator doesn't subtract.";
+  "Past returns don't guarantee future ones. The 7% default is an assumption, not a promise, and real investments carry fees and taxes this calculator doesn't subtract.";
+
+export const ruleRates = [4, 6, 7, 8, 10, 12];
+export const ruleRows = ruleRates.map((rate) => ({
+  rate: `${rate}%`,
+  estimate: yearsLabel(ruleOf72(rate)),
+  exact: yearsLabel(exactDoublingYears(rate)),
+}));
+
+export const ruleNote = `That's why $125,000 invested at 7% with nothing added grows to about ${lump125Text} in 30 years (compounded monthly). The shortcut is closest around 8%. It's a quick mental check, not a replacement for running the numbers.`;
+
+export const popularScenarios = [
+  {
+    href: "/how-long-to-become-a-millionaire",
+    label: "How long to become a millionaire",
+  },
+  {
+    href: "/how-much-to-save-a-month-to-be-a-millionaire",
+    label: "How much to save a month to be a millionaire",
+  },
+  {
+    href: "/can-i-become-a-millionaire",
+    label: "Can I become a millionaire?",
+  },
+  {
+    href: "/500-a-month-to-1-million",
+    label: "$500 a month to $1 million",
+    blurb: `about ${timeTo({ p: 0, m: 500, r: 7 })} at 7%`,
+  },
+  {
+    href: "/become-a-millionaire-by-50",
+    label: "Become a millionaire by 50",
+  },
+];
 
 export const sources = [
   {
@@ -222,80 +226,52 @@ export const sources = [
   },
 ];
 
-export const popularScenarios = [
-  {
-    href: "/500-a-month-for-30-years",
-    label: "$500 a month for 30 years",
-    blurb: `about ${money(fiveHundred(30).bal)} at 7%`,
-  },
-  {
-    href: "/1000-a-month-for-20-years",
-    label: "$1,000 a month for 20 years",
-    blurb: `about ${money(project({ p: 0, m: 1000, r: 7, y: 20, f: 12 }).bal)} at 7%`,
-  },
-  {
-    href: "/how-long-to-reach-1-million",
-    label: "How long to reach $1 million",
-    blurb: "",
-  },
-  {
-    href: "/daily-compound-interest-calculator",
-    label: "Daily compound interest calculator",
-    blurb: "",
-  },
-  {
-    href: "/cost-of-waiting-start-at-25-vs-35",
-    label: "Cost of waiting: start at 25 vs 35",
-    blurb: "",
-  },
-];
-
-const reach500 = formatMonths(monthsToTarget({ p: 0, m: 500, r: 7, f: 12 }, 1_000_000));
-const reach1000 = formatMonths(monthsToTarget({ p: 0, m: 1000, r: 7, f: 12 }, 1_000_000));
-const reachDefault = formatMonths(monthsToTarget(DEFAULTS, 1_000_000));
-const pmtMillion = money(paymentNeeded(1_000_000, { p: 0, r: 7, y: 30 }));
-
 export const pageDisclaimer =
-  "Compound Jar is an educational tool, not financial advice. Results are projections based on the numbers you enter and assume a steady rate of return and end-of-month deposits, before taxes, fees and inflation. Real returns vary, can be negative, and aren't guaranteed. Consider talking to a qualified professional before making investment decisions.";
+  "Compound Jar is an educational compound interest calculator, not financial advice. Reaching $1 million is not guaranteed. Every result is a projection based on the numbers you enter. The 7% default is an assumption, not a forecast or a promise. Projections assume a steady rate of return and end-of-month deposits, before taxes, fees and inflation. Real returns vary, can be negative for years at a time, and you could end up with less than you put in. Consider talking to a qualified professional before making investment decisions.";
 
 export const privacyAnswer =
   "It's free, with no login and no account. Your plan lives in the link itself: the numbers are in the URL, so you can bookmark it or share it. We don't save your inputs in a database. Anonymous visit analytics records the page path and a source tag, not the plan numbers. Our host can still keep request logs of the URL you opened.";
 
+const fromZero500 = timeTo({ p: 0, m: 500, r: 7 });
+const fromZero1000 = timeTo({ p: 0, m: 1000, r: 7 });
+const fromZero1500 = timeTo({ p: 0, m: 1500, r: 7 });
+const with50k = timeTo({ p: 50_000, m: 500, r: 7 });
+
 export const faqs = [
   {
+    q: "Can I become a millionaire?",
+    a: "Enter what you have and what you can save each month, plus a return you're comfortable assuming. If the total reaches $1,000,000 within your timeline, you're on track under those assumptions. If not, raise the monthly deposit or add years until it does. The tables below show common starting points. Returns aren't guaranteed, so test a cautious rate too.",
+  },
+  {
+    q: "How much do I need to save each month to become a millionaire?",
+    a: `It depends on your timeline and return. From $0 at an assumed 7%, it's about ${needed(30, 7)} a month for 30 years, ${needed(20, 7)} for 20 years or ${needed(40, 7)} for 40 years. Already have $25,000 invested? For 30 years it drops to about ${needed(30, 7, 25_000)} a month.`,
+  },
+  {
+    q: "How long does it take to become a millionaire?",
+    a: `At 7% from $0: about ${fromZero500} at $500 a month, ${fromZero1000} at $1,000 a month and ${fromZero1500} at $1,500 a month. With $50,000 already invested and $500 a month, it's about ${with50k}. See [How long to become a millionaire](/how-long-to-become-a-millionaire).`,
+  },
+  {
+    q: "Isn't it faster to go all in on a hot stock or coin?",
+    a: "Honestly, we've all wondered. Sometimes a big bet pays off, and often it doesn't. Either way, you can't plan around it. Steady deposits into a diversified investment don't promise a return either, but they turn the question into math you can see and adjust. This calculator models the steady path. It doesn't recommend any specific investment.",
+  },
+  {
     q: "What is compound interest?",
-    a: "Compound interest is interest earned on both your original money and the interest it has already earned. Because each period's growth builds on a bigger balance, the jar fills faster over time. That's why the curve on the chart bends upward.",
+    a: "Compound interest is growth on both your original money and the growth it has already earned. Each period builds on a bigger balance, so the jar fills faster over time. That's why most of a million-dollar balance arrives in the later years.",
   },
   {
     q: "What's the difference between simple and compound interest?",
-    a: `Simple interest is paid only on your original amount. Compound interest is also paid on past interest. $10,000 at 7% simple interest for 30 years earns ${money(10000 * 0.07 * 30)}, ending at ${money(10000 + 10000 * 0.07 * 30)}. Compounded monthly, it ends at ${lump30.balance}.`,
+    a: `Simple interest is paid only on your original amount. Compound interest is also paid on past interest. In the starting example, the 30 years of deposits total ${defaultContributionText}. Compounding at 7% adds ${defaultGrowthText} on top. Simple interest couldn't get you close to a million on the same deposits.`,
   },
   {
-    q: "How often is interest compounded?",
-    a: "It depends on the account. Savings accounts set their own schedule (daily and monthly are common), so check your account's terms. Stock index funds don't pay a fixed interest rate at all. Their prices move, and dividends get reinvested on their own schedule, so an \"average yearly return\" is an approximation. Monthly compounding is a reasonable default for a what-if.",
+    q: "Is $1 million in 30 years the same as $1 million today?",
+    a: `No. At about 3% inflation (the 1927–2025 average, our calculation from [FRED CPI](https://fred.stlouisfed.org/series/CPIAUCNS)), a future $1M buys roughly what ${inflationMillion} buys today. Lower the return by your inflation guess to plan in today's dollars.`,
   },
   {
-    q: "Does monthly compounding beat annual, and by how much?",
-    a: `Yes, but by less than most people expect. On $10,000 at 7% for 30 years, yearly compounding gives ${lumpFrequency.yearly} and monthly gives ${lumpFrequency.monthly}. Daily adds only ${lumpFrequency.dailyAdds} more on top of monthly.`,
+    q: "Does this account for taxes and fees?",
+    a: "No. Results are before taxes, fees and inflation. Tax-advantaged accounts and fund fees vary too much to model in a quick what-if.",
   },
   {
-    q: "How much will $500 a month grow to?",
-    a: `At 7% a year, $500 a month from $0 grows to about ${money(fiveHundred(10).bal)} in 10 years, ${money(fiveHundred(20).bal)} in 20 years and ${money(fiveHundred(30).bal)} in 30 years. Change any slider above to test your own amount.`,
-  },
-  {
-    q: "How long does it take to double my money?",
-    a: `Use the Rule of 72: divide 72 by your yearly return. At 7%, that's about ${yearsLabel(ruleOf72(7)).replace(" years", "")} years. At 10%, about ${yearsLabel(ruleOf72(10)).replace(" years", "")} years. Regular deposits make your balance grow faster than doubling alone would.`,
-  },
-  {
-    q: "How long will it take to reach $1 million?",
-    a: `At 7%, starting from $0: about ${reach500} at $500 a month, or ${reach1000} at $1,000 a month. To get there in exactly 30 years, you'd need about ${pmtMillion} a month. Our default plan, ${money(DEFAULTS.p)} plus ${money(DEFAULTS.m)} a month, crosses $1 million in about ${reachDefault}. See [How long to reach $1 million](/how-long-to-reach-1-million).`,
-  },
-  {
-    q: "Does this account for inflation and taxes?",
-    a: "No. Results are before inflation, taxes and fees. For a rough today's-dollars view, lower the yearly return by your expected inflation rate (see above). Tax-advantaged accounts and fund fees vary too much to model in a quick what-if.",
-  },
-  {
-    q: "Is this calculator accurate?",
+    q: "Is this compound interest calculator accurate?",
     a: "The math is exact for the inputs you give it. It uses the standard future-value formula with end-of-month deposits, and you can check it by hand with the formula above. Our [Methodology](/methodology) page spells out every assumption. What no calculator can promise is the return: real markets rise and fall, sometimes sharply.",
   },
   {

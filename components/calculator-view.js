@@ -10,6 +10,7 @@ import {
   formatInput,
   formatMoney,
   formatRate,
+  formatShareStamp,
   nextMonthStart,
   planKey,
   planSearchParams,
@@ -41,11 +42,12 @@ function Logo() {
 
 export function CalculatorView({ plan, origin, title, subhead, scenario, tableOpen = false }) {
   const result = project(plan);
-  const shareYear = new Date().getFullYear();
-  const model = previewModel(plan, { startYear: shareYear });
+  const now = new Date();
+  const shareDate = formatShareStamp({ year: now.getFullYear(), month: now.getMonth() + 1 });
+  const model = previewModel(plan, { shareDate: { year: now.getFullYear(), month: now.getMonth() + 1 }, origin });
   const years = plan.y;
   const host = origin.replace(/^https?:\/\//, "");
-  const shareQuery = planSearchParams(plan, { src: "share", startYear: shareYear }).toString();
+  const shareQuery = planSearchParams(plan, { src: "share", shareDate }).toString();
   const shown = formatHeadline(result.bal);
   const icsQuery = planSearchParams(plan);
   icsQuery.set("d", nextMonthStart());
@@ -74,7 +76,7 @@ export function CalculatorView({ plan, origin, title, subhead, scenario, tableOp
           data-plan={scenario ? planKey(plan) : undefined}
         >
           <h1 id="page-title">{title || "Compound Interest Calculator"}</h1>
-          <p className="subhead">{subhead || "See what your money becomes. Just keep compounding."}</p>
+          <p className="subhead">{subhead || "Enter what you have and what you can save. We'll tell you if you can become a millionaire."}</p>
 
           <div className="pin" id="pin" aria-live="polite">
             <div className="eyebrow">Your money could grow to</div>
