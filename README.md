@@ -54,6 +54,10 @@ Search Console and Bing Webmaster Tools are separate dashboard steps.
 - Scenario pages are not built yet. Add an entry to `content/scenarios.js`, then add `app/[slug]/page.js` that looks the slug up with `findScenario()`. Give that page its own canonical and, later, a `scenario_page_view` event. The sitemap already includes whatever is in the list.
 - Footer pages (About, Methodology, Privacy) are not built yet. Add `{ href, label }` entries to `content/footer.js` when those routes exist.
 
+## Lighthouse
+
+A throttled mobile run of the production build on localhost scored 99 performance, 100 accessibility, 100 best practices, and 100 SEO. Largest Contentful Paint was 2.0s, cumulative layout shift was 0.008, and total blocking time was 51ms.
+
 ## Analytics hosts
 
 AI referrers matched today: chatgpt.com, chat.openai.com, perplexity.ai, gemini.google.com, copilot.microsoft.com, claude.ai, plus a `utm_source` equal to that host or slug. `utm_source`, `utm_medium`, and `utm_campaign` stay on the real URL.

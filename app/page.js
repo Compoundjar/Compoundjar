@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import Script from "next/script";
 import { CalculatorView } from "../components/calculator-view.js";
 import { HomeContent } from "../components/home-content.js";
 import { JsonLd } from "../components/json-ld.js";
@@ -58,7 +59,7 @@ export default async function Page({ searchParams }) {
       <HomeContent />
       <JsonLd data={buildJsonLd({ faqs, sameAs })} />
       <script id="cj-analytics" type="application/json" dangerouslySetInnerHTML={{ __html: configJson }} />
-      <script src={calculatorSrc} defer />
+      <Script src={calculatorSrc} strategy="afterInteractive" />
     </>
   );
 }

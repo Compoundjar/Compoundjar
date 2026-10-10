@@ -2,6 +2,9 @@
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    inlineCss: true,
+  },
   async redirects() {
     return [
       {
