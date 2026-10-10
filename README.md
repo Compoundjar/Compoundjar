@@ -57,7 +57,7 @@ Search Console and Bing Webmaster Tools are separate dashboard steps.
 
 ## Lighthouse
 
-A throttled mobile run of the production build on localhost scored 97 performance, 100 accessibility, 100 best practices, and 100 SEO. Largest Contentful Paint was 2.4s, cumulative layout shift was 0.008, and total blocking time was 86ms.
+A throttled mobile run of the production build on localhost scored 97 performance, 100 accessibility, 100 best practices, and 100 SEO. Largest Contentful Paint was 2.5s, cumulative layout shift was 0.008, and total blocking time was 60ms.
 
 ## Analytics hosts
 
