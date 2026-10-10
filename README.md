@@ -29,7 +29,7 @@ npm start
 
 ## Deploy
 
-Import this repo in Vercel. Next.js is detected from `package.json`. No environment variables are required.
+Import this repo in Vercel. Next.js is detected from `package.json`. No environment variables are required. After the project is connected, each push to a pull request branch gets a preview deployment. The preview URL shows up on the pull request checks.
 
 After the first deployment:
 
